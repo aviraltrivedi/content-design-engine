@@ -1,0 +1,19 @@
+{
+  "name": "content-design-engine",
+  "version": "1.0.0",
+  "description": "Autonomous Content & Design Engine for Hackathon",
+  "main": "engine.js",
+  "scripts": {
+    "start": "node engine.js",
+    "dev": "node engine.js"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "express": "^5.2.1",
+    "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "fs-extra": "^11.1.1",
+    "multer": "^2.1.1",
+    "sharp": "^0.32.6"
+  }
+}

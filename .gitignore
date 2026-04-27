@@ -1,0 +1,13 @@
+node_modules/
+input/
+output/
+processed/
+low-confidence/
+rationale.json
+.tempmediaStorage/
+browser/
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.webp
