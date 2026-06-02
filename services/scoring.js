@@ -11,7 +11,7 @@ async function scoreAsset(filePath) {
     if (['.jpg', '.jpeg', '.png'].includes(ext)) {
         const metadata = await sharp(filePath).metadata();
         
-        // Resolution score
+        // Resolution score (max 40)
         const resolution = metadata.width * metadata.height;
         if (resolution >= 2073600) { // 1080p
             score += 40;
@@ -23,16 +23,50 @@ async function scoreAsset(filePath) {
             rationale.push('Low resolution');
         }
 
-        // Format score
+        // Format score (max 10)
         if (ext === '.png') {
             score += 10;
             rationale.push('Lossless PNG format');
         }
 
-        // Simulate AI Quality Score (Placeholder for actual vision AI)
-        const mockAIQuality = Math.floor(Math.random() * 50);
-        score += mockAIQuality;
-        rationale.push(`AI Visual Quality Assessment: ${mockAIQuality}/50`);
+        // Real Computer Vision AI Feature Analysis (max 50)
+        try {
+            const imageStats = await sharp(filePath).stats();
+            
+            // Laplacian filter convolution for focus/sharpness
+            const laplacianKernel = {
+                width: 3,
+                height: 3,
+                kernel: [
+                    0,  1, 0,
+                    1, -4, 1,
+                    0,  1, 0
+                ]
+            };
+            const edgeStats = await sharp(filePath)
+                .grayscale()
+                .convolve(laplacianKernel)
+                .stats();
+            
+            const sharpnessStdev = edgeStats.channels[0].stdev;
+            const contrastStdev = imageStats.channels.reduce((acc, c) => acc + c.stdev, 0) / imageStats.channels.length;
+            const entropy = imageStats.entropy;
+
+            // Normalize and weight features into visual quality scores
+            const sharpnessScore = Math.min(20, Math.max(0, (sharpnessStdev - 2) * 0.45));
+            const contrastScore = Math.min(15, Math.max(0, (contrastStdev - 10) * 0.25));
+            const entropyScore = Math.min(15, Math.max(0, (entropy - 3.5) * 3.5));
+            
+            const visualQualityScore = Math.round(sharpnessScore + contrastScore + entropyScore);
+            score += visualQualityScore;
+            
+            rationale.push(`AI Visual Quality: ${visualQualityScore}/50 (Sharpness: ${sharpnessStdev.toFixed(1)}, Contrast: ${contrastStdev.toFixed(1)}, Detail: ${entropy.toFixed(1)})`);
+        } catch (e) {
+            // Graceful fallback if stats computation fails
+            const fallbackVisualQuality = 25;
+            score += fallbackVisualQuality;
+            rationale.push(`AI Visual Quality Assessment (Fallback): ${fallbackVisualQuality}/50`);
+        }
 
     } else if (['.mp4', '.mov'].includes(ext)) {
         // Simple video heuristics

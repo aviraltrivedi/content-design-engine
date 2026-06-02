@@ -1,127 +1,294 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content & Design Engine | Interactive</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <meta name="description" content="Automated content design engine with AI-powered scoring, LinkedIn post generation, and Instagram Reel creation.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #050505;
-            --card-bg: rgba(255, 255, 255, 0.03);
+        /* ===== Theme Variables ===== */
+        [data-theme="dark"] {
+            --bg: #0a0a0f;
+            --bg-secondary: #12121a;
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --card-hover-border: rgba(129, 140, 248, 0.25);
             --accent: #818cf8;
-            --accent-glow: rgba(129, 140, 248, 0.3);
-            --text: #f8fafc;
+            --accent-soft: #6366f1;
+            --accent-glow: rgba(129, 140, 248, 0.25);
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
             --text-dim: #64748b;
+            --preview-bg: #0f0f14;
+            --input-bg: rgba(255, 255, 255, 0.06);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --gradient-start: #1e1b4b;
+            --score-bg: rgba(74, 222, 128, 0.1);
+            --score-color: #4ade80;
+            --table-border: rgba(255, 255, 255, 0.05);
+            --modal-bg: rgba(5, 5, 5, 0.88);
+            --toast-shadow: rgba(0, 0, 0, 0.5);
         }
 
-        * { box-sizing: border-box; }
+        [data-theme="light"] {
+            --bg: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --card-hover-border: rgba(99, 102, 241, 0.4);
+            --accent: #6366f1;
+            --accent-soft: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --text: #1e293b;
+            --text-secondary: #475569;
+            --text-dim: #94a3b8;
+            --preview-bg: #e2e8f0;
+            --input-bg: rgba(0, 0, 0, 0.04);
+            --input-border: rgba(0, 0, 0, 0.12);
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --gradient-start: #e0e7ff;
+            --score-bg: rgba(22, 163, 74, 0.1);
+            --score-color: #16a34a;
+            --table-border: rgba(0, 0, 0, 0.06);
+            --modal-bg: rgba(255, 255, 255, 0.92);
+            --toast-shadow: rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===== Reset & Base ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 40px 20px;
+            padding: 40px 24px 60px;
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
-        /* Subtle Background Animation */
         body::before {
             content: '';
             position: fixed;
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
-            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, transparent 50%);
-            opacity: 0.3;
+            top: -10%; left: -10%;
+            width: 120%; height: 120%;
+            background: radial-gradient(circle at 50% 40%, var(--gradient-start) 0%, transparent 55%);
+            opacity: 0.35;
             z-index: -1;
             filter: blur(80px);
+            transition: background 0.4s ease;
         }
 
-        header {
+        /* ===== Theme Toggle ===== */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            z-index: 100;
+            width: 52px;
+            height: 28px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .theme-toggle-knob {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+
+        [data-theme="light"] .theme-toggle-knob {
+            transform: translateX(24px);
+        }
+
+        .theme-toggle-knob svg {
+            width: 12px;
+            height: 12px;
+            fill: #fff;
+        }
+
+        /* ===== Header ===== */
+        .page-header {
             text-align: center;
-            margin-bottom: 60px;
-            animation: fadeInDown 0.8s ease-out;
+            margin-bottom: 48px;
+            animation: fadeInDown 0.6s ease-out;
+            width: 100%;
+            max-width: 1200px;
         }
 
         @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
+            from { opacity: 0; transform: translateY(-16px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, #fff 0%, #818cf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
+        .page-header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            font-weight: 400;
+        }
+
+        /* ===== Controls Bar ===== */
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease-out 0.15s both;
+        }
+
+        .controls-bar label {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        .controls-bar select {
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--input-border);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .controls-bar select:hover,
+        .controls-bar select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* ===== Upload Zone ===== */
         .upload-zone {
             width: 100%;
-            max-width: 800px;
+            max-width: 1200px;
             background: var(--card-bg);
-            border: 2px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 32px;
-            padding: 60px;
+            border: 2px dashed var(--card-border);
+            border-radius: 24px;
+            padding: 48px 32px;
             text-align: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            margin-bottom: 60px;
+            margin-bottom: 40px;
             position: relative;
-            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out 0.25s both;
         }
 
         .upload-zone:hover, .upload-zone.dragover {
             border-color: var(--accent);
-            background: rgba(129, 140, 248, 0.05);
+            background: var(--accent-glow);
             box-shadow: 0 0 40px var(--accent-glow);
         }
 
-        .upload-zone h3 { font-size: 1.5rem; margin-bottom: 10px; }
-        .upload-zone p { color: var(--text-dim); }
+        .upload-zone h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
 
+        .upload-zone p { color: var(--text-dim); font-size: 0.92rem; }
         .hidden-input { display: none; }
 
+        /* ===== Grid Layout ===== */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 30px;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
             width: 100%;
-            max-width: 1240px;
+            max-width: 1200px;
+            animation: fadeInUp 0.6s ease-out 0.35s both;
         }
 
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* ===== Cards ===== */
         .card {
             background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 28px;
-            padding: 30px;
-            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
+            transition: all 0.3s ease;
+            min-height: 320px;
         }
 
-        .card h2 { font-size: 1.25rem; margin: 0; color: var(--accent); }
+        .card:hover {
+            border-color: var(--card-hover-border);
+            box-shadow: 0 8px 32px var(--shadow-color);
+        }
 
+        .card-full { grid-column: 1 / -1; min-height: auto; }
+
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== Preview Containers ===== */
         .preview-container {
             width: 100%;
             aspect-ratio: 16/10;
-            background: #000;
-            border-radius: 18px;
+            background: var(--preview-bg);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            transition: border-color 0.3s ease;
         }
 
         .preview-container img {
@@ -130,25 +297,45 @@
             object-fit: cover;
         }
 
-        .empty-state { color: var(--text-dim); font-style: italic; font-size: 0.9rem; }
+        .empty-state {
+            color: var(--text-dim);
+            font-style: italic;
+            font-size: 0.88rem;
+        }
 
+        /* ===== Scoring Table ===== */
         .log-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
         }
 
-        .log-table th { text-align: left; color: var(--text-dim); padding-bottom: 10px; }
-        .log-table td { padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, 0.05); }
-
-        .score-badge {
-            background: rgba(74, 222, 128, 0.1);
-            color: #4ade80;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 600;
+        .log-table th {
+            text-align: left;
+            color: var(--text-dim);
+            font-weight: 500;
+            padding-bottom: 12px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        .log-table td {
+            padding: 10px 0;
+            border-top: 1px solid var(--table-border);
+            color: var(--text-secondary);
+        }
+
+        .score-badge {
+            background: var(--score-bg);
+            color: var(--score-color);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.82rem;
+        }
+
+        /* ===== Toast ===== */
         .toast {
             position: fixed;
             bottom: 40px;
@@ -156,39 +343,311 @@
             color: white;
             padding: 12px 24px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-weight: 500;
+            box-shadow: 0 10px 30px var(--toast-shadow);
             transform: translateY(100px);
             transition: transform 0.3s ease;
+            z-index: 500;
         }
+
         .toast.show { transform: translateY(0); }
 
+        /* ===== Video Modal ===== */
+        .video-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: var(--modal-bg);
+            backdrop-filter: blur(18px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+
+        .video-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 900px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px var(--shadow-color), 0 0 50px var(--accent-glow);
+            transform: scale(0.92) translateY(16px);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .video-modal.show .video-modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .video-modal-close {
+            position: absolute;
+            top: 14px; right: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.4rem;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .video-modal-close:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent-glow);
+            transform: rotate(90deg);
+        }
+
+        .video-modal-player-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-modal-player-container video {
+            width: 100%; height: 100%;
+            object-fit: contain;
+        }
+
+        .video-modal-info {
+            padding: 16px 24px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--table-border);
+        }
+
+        .video-modal-info h3 {
+            margin: 0 0 4px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .video-modal-info p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: var(--text-dim);
+        }
+
+        /* ===== Video Card Overlay ===== */
+        .video-preview-card { position: relative; cursor: pointer; }
+
+        .video-preview-card:hover video { transform: scale(1.05); }
+
+        .video-preview-card video {
+            transition: transform 0.4s ease;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5, 5, 5, 0.45);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            gap: 10px;
+            z-index: 1;
+            border-radius: 14px;
+        }
+
+        .video-preview-card:hover .play-overlay { opacity: 1; }
+
+        .play-button-icon {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: scale(0.85);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .video-preview-card:hover .play-button-icon { transform: scale(1); }
+
+        .play-button-icon svg { width: 24px; height: 24px; margin-left: 3px; }
+
+        /* ===== Carousel Styles ===== */
+        .carousel-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .carousel-track-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            border-radius: 14px;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .carousel-btn:hover {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 15px var(--accent-glow);
+            border-color: var(--accent);
+        }
+
+        .carousel-btn.prev { left: 12px; }
+        .carousel-btn.next { right: 12px; }
+
+        .carousel-indicator-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .carousel-indicator-badge {
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--input-border);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== Footer Badge ===== */
+        .footer-badge {
+            margin-top: 48px;
+            color: var(--text-dim);
+            font-size: 0.78rem;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
 
-    <header>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" id="theme-toggle" title="Toggle light/dark theme">
+        <div class="theme-toggle-knob">
+            <svg id="theme-icon-dark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+            <svg id="theme-icon-light" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zm11.394-5.834a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/></svg>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="page-header">
         <h1>Design Orchestrator</h1>
-        <p style="color: var(--text-dim); margin-top: 10px; font-size: 1.1rem;">Automated Content Engine & Quality Analyzer</p>
+        <p>Automated Content Engine & Quality Analyzer</p>
     </header>
 
+    <!-- Controls -->
+    <div class="controls-bar">
+        <label for="template-select">LinkedIn Template</label>
+        <select id="template-select">
+            <option>Loading…</option>
+        </select>
+    </div>
+
+    <!-- Upload Zone -->
     <div class="upload-zone" id="drop-zone">
         <h3>Drop Assets Here</h3>
-        <p>Support for JPG, PNG, MP4. Drop 4+ images for LinkedIn Collages.</p>
+        <p>Support for JPG, PNG, MP4 — drop 4+ images for LinkedIn posts</p>
         <input type="file" id="file-input" class="hidden-input" multiple accept="image/*,video/*">
     </div>
 
+    <!-- Content Grid -->
     <div class="grid">
-        <!-- Live Previews -->
+        <!-- LinkedIn Posts -->
         <div class="card">
-            <h2>Latest Transformations</h2>
-            <div id="output-previews" style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="preview-container"><div class="empty-state">Waiting for engine output...</div></div>
+            <h2>📸 LinkedIn Posts</h2>
+            <div id="photo-previews-container" class="carousel-wrapper">
+                <div class="carousel-track-container">
+                    <div id="photo-previews" class="carousel-track">
+                        <div class="carousel-slide">
+                            <div class="preview-container">
+                                <div class="empty-state">Waiting for photo transformations…</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Rationale Log -->
+        <!-- Instagram Reels -->
         <div class="card">
-            <h2>Live Scoring Pipeline</h2>
+            <h2>🎬 Instagram Reels</h2>
+            <div id="reel-previews-container" class="carousel-wrapper">
+                <div class="carousel-track-container">
+                    <div id="reel-previews" class="carousel-track">
+                        <div class="carousel-slide">
+                            <div class="preview-container">
+                                <div class="empty-state">Waiting for reel transformations…</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoring Pipeline -->
+        <div class="card card-full">
+            <h2>⚡ Live Scoring Pipeline</h2>
             <table class="log-table">
                 <thead>
                     <tr>
@@ -204,16 +663,59 @@
         </div>
     </div>
 
-    <div class="toast" id="toast">Files uploaded! Processing...</div>
+    <div class="footer-badge">Content & Design Engine v2 — Powered by AI Scoring</div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">Files uploaded! Processing…</div>
+
+    <!-- Video Player Modal -->
+    <div id="video-modal" class="video-modal" onclick="closeVideoModal(event)">
+        <div class="video-modal-content" onclick="event.stopPropagation()">
+            <button class="video-modal-close" onclick="closeVideoModal(event)">&times;</button>
+            <div class="video-modal-player-container">
+                <video id="modal-video" controls autoplay playsinline preload="auto"></video>
+            </div>
+            <div class="video-modal-info">
+                <h3 id="modal-video-title">Instagram Reel</h3>
+                <p id="modal-video-desc">Dynamic web-optimized video stream rendering.</p>
+            </div>
+        </div>
+    </div>
 
     <script>
+        // ===== Theme Toggle =====
+        const themeToggle = document.getElementById('theme-toggle');
+        const iconDark = document.getElementById('theme-icon-dark');
+        const iconLight = document.getElementById('theme-icon-light');
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            if (theme === 'light') {
+                iconDark.style.display = 'none';
+                iconLight.style.display = 'block';
+            } else {
+                iconDark.style.display = 'block';
+                iconLight.style.display = 'none';
+            }
+        }
+
+        // Load saved theme or default dark
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        // ===== Upload Handling =====
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const toast = document.getElementById('toast');
 
-        // Drag & Drop
         dropZone.onclick = () => fileInput.click();
-        
+
         dropZone.ondragover = (e) => {
             e.preventDefault();
             dropZone.classList.add('dragover');
@@ -231,12 +733,10 @@
 
         async function handleFiles(files) {
             if (files.length === 0) return;
-            
             const formData = new FormData();
             for (let file of files) {
                 formData.append('assets', file);
             }
-
             toast.classList.add('show');
             try {
                 const res = await fetch('/upload', { method: 'POST', body: formData });
@@ -248,44 +748,212 @@
             }
         }
 
-        // Live Update Logic
+        // ===== Carousel State & Logic =====
+        let currentPhotoIndex = 0;
+        let currentReelIndex = 0;
+        let cachedPhotos = [];
+        let cachedReels = [];
+
+        function updateCarouselControls(type, container, total, activeIndex) {
+            let controls = container.querySelector('.carousel-indicator-container');
+            if (!controls) {
+                controls = document.createElement('div');
+                controls.className = 'carousel-indicator-container';
+                container.appendChild(controls);
+            }
+
+            if (total <= 1) {
+                controls.innerHTML = `<span class="carousel-indicator-badge">1 / 1</span>`;
+                const oldPrev = container.querySelector('.carousel-btn.prev');
+                const oldNext = container.querySelector('.carousel-btn.next');
+                if (oldPrev) oldPrev.remove();
+                if (oldNext) oldNext.remove();
+                return;
+            }
+
+            controls.innerHTML = `<span class="carousel-indicator-badge">${activeIndex + 1} / ${total}</span>`;
+
+            let prevBtn = container.querySelector('.carousel-btn.prev');
+            if (!prevBtn) {
+                prevBtn = document.createElement('button');
+                prevBtn.className = 'carousel-btn prev';
+                prevBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+                prevBtn.onclick = (e) => { e.stopPropagation(); navigateCarousel(type, -1, total); };
+                container.appendChild(prevBtn);
+            }
+
+            let nextBtn = container.querySelector('.carousel-btn.next');
+            if (!nextBtn) {
+                nextBtn = document.createElement('button');
+                nextBtn.className = 'carousel-btn next';
+                nextBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+                nextBtn.onclick = (e) => { e.stopPropagation(); navigateCarousel(type, 1, total); };
+                container.appendChild(nextBtn);
+            }
+        }
+
+        function navigateCarousel(type, direction, total) {
+            if (type === 'photo') {
+                currentPhotoIndex = (currentPhotoIndex + direction + total) % total;
+                const track = document.getElementById('photo-previews');
+                if (track) track.style.transform = `translateX(-${currentPhotoIndex * 100}%)`;
+                const container = document.getElementById('photo-previews-container');
+                updateCarouselControls('photo', container, total, currentPhotoIndex);
+            } else if (type === 'reel') {
+                currentReelIndex = (currentReelIndex + direction + total) % total;
+                const track = document.getElementById('reel-previews');
+                if (track) track.style.transform = `translateX(-${currentReelIndex * 100}%)`;
+                const container = document.getElementById('reel-previews-container');
+                updateCarouselControls('reel', container, total, currentReelIndex);
+            }
+        }
+
+        // ===== Live Updates =====
         async function fetchResults() {
             try {
                 const res = await fetch('/results');
                 const data = await res.json();
-                
-                // Update Logs
+
+                // Scoring Log
                 if (data.logs && data.logs.length > 0) {
                     const logBody = document.getElementById('log-body');
-                    logBody.innerHTML = data.logs.reverse().map(log => `
+                    logBody.innerHTML = data.logs.slice().reverse().map(log => `
                         <tr>
-                            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${log.file}</td>
+                            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${log.file}</td>
                             <td><span class="score-badge">${log.score}</span></td>
                             <td>${log.isLowConfidence ? '⚠️ Flagged' : '✅ Approved'}</td>
                         </tr>
                     `).join('');
                 }
 
-                // Update Output Previews
+                // Photo + Reel Previews
                 if (data.latestOutput && data.latestOutput.length > 0) {
-                    const previews = document.getElementById('output-previews');
-                    previews.innerHTML = data.latestOutput.map(file => {
-                        const ext = file.split('.').pop().toLowerCase();
-                        if (['png', 'jpg', 'jpeg'].includes(ext)) {
-                            return `<div class="preview-container"><img src="/output/${file}" alt="Output"></div>`;
-                        } else if (ext === 'mp4') {
-                            return `<div class="preview-container"><video src="/output/${file}" autoplay loop muted style="width:100%; height:100%; object-fit:cover;"></video></div>`;
+                    // Photos
+                    const photoPreviews = document.getElementById('photo-previews');
+                    const photoContainer = document.getElementById('photo-previews-container');
+                    const photos = data.latestOutput.filter(o => /\.(png|jpg|jpeg)$/i.test(o.name));
+                    
+                    if (photos.length > 0) {
+                        const photosChanged = JSON.stringify(photos.map(p => p.name)) !== JSON.stringify(cachedPhotos);
+                        if (photosChanged) {
+                            cachedPhotos = photos.map(p => p.name);
+                            photoPreviews.innerHTML = photos.map(o => `
+                                <div class="carousel-slide">
+                                    <div class="preview-container">
+                                        <img src="/output/${o.name}" alt="LinkedIn Post">
+                                    </div>
+                                </div>
+                            `).join('');
+                            if (currentPhotoIndex >= photos.length) {
+                                currentPhotoIndex = 0;
+                            }
                         }
-                        return '';
-                    }).join('');
+                        photoPreviews.style.transform = `translateX(-${currentPhotoIndex * 100}%)`;
+                        updateCarouselControls('photo', photoContainer, photos.length, currentPhotoIndex);
+                    }
+
+                    // Reels
+                    const reelPreviews = document.getElementById('reel-previews');
+                    const reelContainer = document.getElementById('reel-previews-container');
+                    const reels = data.latestOutput.filter(o => /\.mp4$/i.test(o.name));
+                    
+                    if (reels.length > 0) {
+                        const reelsChanged = JSON.stringify(reels.map(r => r.name)) !== JSON.stringify(cachedReels);
+                        if (reelsChanged) {
+                            cachedReels = reels.map(r => r.name);
+                            reelPreviews.innerHTML = reels.map(o => {
+                                const sizeMB = (o.size / (1024 * 1024)).toFixed(1);
+                                return `
+                                <div class="carousel-slide">
+                                    <div class="preview-container video-preview-card" onclick="openVideoModal('/output/${o.name}', '${o.name}')">
+                                        <video src="/output/${o.name}" playsinline preload="auto" loop muted style="width:100%; height:100%; object-fit:cover; background:#000; pointer-events:none;"></video>
+                                        <div class="play-overlay">
+                                            <div class="play-button-icon">
+                                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                            </div>
+                                            <span style="font-weight:600; font-size:0.82rem; letter-spacing:0.4px;">Play In-Screen</span>
+                                        </div>
+                                        <div style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.1); padding:3px 9px; border-radius:7px; font-size:0.7rem; color:#fff; font-weight:600; z-index:2;">
+                                            ${sizeMB} MB
+                                        </div>
+                                    </div>
+                                </div>`;
+                            }).join('');
+                            if (currentReelIndex >= reels.length) {
+                                currentReelIndex = 0;
+                            }
+                        }
+                        reelPreviews.style.transform = `translateX(-${currentReelIndex * 100}%)`;
+                        updateCarouselControls('reel', reelContainer, reels.length, currentReelIndex);
+                    }
                 }
             } catch (err) {
                 console.error('Fetch error:', err);
             }
         }
 
+        // ===== Template Selector =====
+        async function loadTemplateSelector() {
+            const select = document.getElementById('template-select');
+            try {
+                const manifestRes = await fetch('/templates/linkedin/manifest');
+                const manifest = await manifestRes.json();
+                select.innerHTML = '';
+                manifest.templates.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name;
+                    select.appendChild(opt);
+                });
+                const curRes = await fetch('/templates/linkedin/current');
+                const cur = await curRes.json();
+                if (cur && cur.templateId) select.value = cur.templateId;
+            } catch (e) {
+                console.error('Template load error:', e);
+            }
+            select.addEventListener('change', async () => {
+                await fetch('/templates/linkedin/current', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ templateId: select.value })
+                });
+            });
+        }
+
+        loadTemplateSelector();
         setInterval(fetchResults, 3000);
-        fetchResults(); // Initial load
+        fetchResults();
+
+        // ===== Video Modal =====
+        function openVideoModal(videoSrc, fileName) {
+            const modal = document.getElementById('video-modal');
+            const video = document.getElementById('modal-video');
+            const title = document.getElementById('modal-video-title');
+            video.src = videoSrc;
+            title.textContent = fileName.replace(/_/g, ' ');
+            modal.classList.add('show');
+            video.play().catch(err => console.log('Autoplay blocked:', err));
+        }
+
+        function closeVideoModal(e) {
+            const modal = document.getElementById('video-modal');
+            const video = document.getElementById('modal-video');
+            modal.classList.remove('show');
+            video.pause();
+            video.src = '';
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('video-modal');
+            const video = document.getElementById('modal-video');
+            if (!modal.classList.contains('show')) return;
+            if (e.key === 'Escape') {
+                closeVideoModal();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                video.paused ? video.play() : video.pause();
+            }
+        });
     </script>
 </body>
 </html>

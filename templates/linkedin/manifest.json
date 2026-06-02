@@ -1,0 +1,11 @@
+{
+  "templates": [
+    {
+      "id": "professional-1",
+      "name": "Professional Canva Template",
+      "filename": "professional-1.png",
+      "thumbnail": "professional-1-thumb.png",
+      "dimensions": [1200, 628]
+    }
+  ]
+}
