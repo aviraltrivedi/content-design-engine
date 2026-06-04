@@ -61,6 +61,46 @@ app.post('/upload', upload.array('assets'), (req, res) => {
     res.json({ message: 'Files uploaded successfully. Engine is processing...', count: req.files.length });
 });
 
+// Reset endpoint
+app.post('/reset', async (req, res) => {
+    try {
+        // 1. Clear rationale.json
+        await fs.writeJson('./rationale.json', [], { spaces: 2 });
+
+        // 2. Move files from processed/ back to input/
+        const processedDir = './processed';
+        if (await fs.exists(processedDir)) {
+            const processedFiles = await fs.readdir(processedDir);
+            for (const file of processedFiles) {
+                await fs.move(path.join(processedDir, file), path.join('./input', file), { overwrite: true });
+            }
+        }
+
+        // 3. Move files from low-confidence/ back to input/
+        const lowConfDir = './low-confidence';
+        if (await fs.exists(lowConfDir)) {
+            const lowConfFiles = await fs.readdir(lowConfDir);
+            for (const file of lowConfFiles) {
+                await fs.move(path.join(lowConfDir, file), path.join('./input', file), { overwrite: true });
+            }
+        }
+
+        // 4. Empty output/
+        const outputDir = './output';
+        if (await fs.exists(outputDir)) {
+            const outputFiles = await fs.readdir(outputDir);
+            for (const file of outputFiles) {
+                await fs.remove(path.join(outputDir, file));
+            }
+        }
+
+        res.json({ message: 'Scoring reset successfully! Engine is re-processing all assets.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 // Results endpoint
 app.get('/results', async (req, res) => {
     try {
@@ -70,7 +110,7 @@ app.get('/results', async (req, res) => {
             
             // Get latest output files
             const outputFiles = await fs.readdir('./output');
-            const filteredFiles = outputFiles.filter(f => /\.(png|jpg|jpeg|mp4|md|txt)$/i.test(f));
+            const filteredFiles = outputFiles.filter(f => /\.(png|jpg|jpeg|mp4)$/i.test(f));
             
             const latestOutput = filteredFiles
                 .map(f => {

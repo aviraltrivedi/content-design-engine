@@ -48,8 +48,11 @@ let videoPipelineTimer = null;
 let isImageProcessing = false;
 let isVideoProcessing = false;
 
+let activeScoringCount = 0;
+
 watcher.on('add', async (filePath) => {
     console.log(`\n📄 New asset detected: ${path.basename(filePath)}`);
+    activeScoringCount++;
 
     try {
         const evaluation = await scoreAsset(filePath);
@@ -58,7 +61,19 @@ watcher.on('add', async (filePath) => {
             file: path.basename(filePath),
             ...evaluation
         };
-        assetLog.push(logEntry);
+        
+        let currentLog = [];
+        try {
+            if (await fs.exists(LOG_FILE)) {
+                currentLog = await fs.readJson(LOG_FILE);
+                if (!Array.isArray(currentLog)) currentLog = [];
+            }
+        } catch (e) {
+            currentLog = [];
+        }
+        
+        currentLog.push(logEntry);
+        assetLog = currentLog;
         await fs.writeJson(LOG_FILE, assetLog, { spaces: 2 });
 
         if (evaluation.isLowConfidence) {
@@ -73,7 +88,12 @@ watcher.on('add', async (filePath) => {
                 // Video Pipeline Debouncing
                 if (videoPipelineTimer) clearTimeout(videoPipelineTimer);
 
-                videoPipelineTimer = setTimeout(async () => {
+                const runVideoPipeline = async () => {
+                    if (activeScoringCount > 0) {
+                        console.log(`⏳ Video Pipeline: ${activeScoringCount} assets still scoring. Postponing...`);
+                        videoPipelineTimer = setTimeout(runVideoPipeline, 1000);
+                        return;
+                    }
                     if (isVideoProcessing) {
                         console.log('⏳ Video Pipeline already running. Re-queuing...');
                         return;
@@ -86,12 +106,18 @@ watcher.on('add', async (filePath) => {
                         isVideoProcessing = false;
                         videoPipelineTimer = null;
                     }
-                }, 2500); // 2.5s buffer for videos
+                };
+                videoPipelineTimer = setTimeout(runVideoPipeline, 2500); // 2.5s buffer for videos
             } else {
                 // Image Pipeline Debouncing
                 if (imagePipelineTimer) clearTimeout(imagePipelineTimer);
 
-                imagePipelineTimer = setTimeout(async () => {
+                const runImagePipeline = async () => {
+                    if (activeScoringCount > 0) {
+                        console.log(`⏳ Image Pipeline: ${activeScoringCount} assets still scoring. Postponing...`);
+                        imagePipelineTimer = setTimeout(runImagePipeline, 1000);
+                        return;
+                    }
                     if (isImageProcessing) {
                         console.log('⏳ Image Pipeline already running. Re-queuing...');
                         return;
@@ -104,11 +130,14 @@ watcher.on('add', async (filePath) => {
                         isImageProcessing = false;
                         imagePipelineTimer = null;
                     }
-                }, 2500); // 2.5s buffer for images
+                };
+                imagePipelineTimer = setTimeout(runImagePipeline, 2500); // 2.5s buffer for images
             }
         }
     } catch (err) {
         console.error(`❌ Error processing asset: ${err.message}`);
+    } finally {
+        activeScoringCount = Math.max(0, activeScoringCount - 1);
     }
 });
 
